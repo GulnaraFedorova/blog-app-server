@@ -3,6 +3,7 @@ const express = require('express');
 const models = require('./models');
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
+const { swaggerUi, swaggerDocs } = require('./swagger')
 
 const app = express();
 
@@ -33,3 +34,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// Маршрут для документации
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))

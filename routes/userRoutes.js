@@ -7,6 +7,32 @@ const { User } = require('../models')
 const router = express.Router();
 
 // Регистрация
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     summary: Регистрация нового пользователя
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email пользователя
+ *               password:
+ *                 type: string
+ *                 description: Пароль пользователя
+ *     responses:
+ *       201:
+ *         description: Пользователь успешно зарегистрирован
+ *       400:
+ *         description: Email уже используется
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.post('/register', async (req, res) => {
     try {
         const { email, password } = req.body
@@ -31,6 +57,32 @@ router.post('/register', async (req, res) => {
 })
 
 // Авторизация
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Авторизация пользователя
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email пользователя
+ *               password:
+ *                 type: string
+ *                 description: Пароль пользователя
+ *     responses:
+ *       200:
+ *         description: Успешная авторизация
+ *       401:
+ *         description: Неверный email или пароль
+ *       500:
+ *         description: Ошибка сервера
+ */
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
