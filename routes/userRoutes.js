@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const models = require('../models');
+const { User } = require('../models')
 
 const router = express.Router();
 
@@ -9,6 +10,7 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
     try {
         const { email, password } = req.body
+
         // Проверка, есть ли пользователь с таким email
         const existingUser = await User.findOne({ where: { email } })
         if (existingUser) {
@@ -23,7 +25,7 @@ router.post('/register', async (req, res) => {
         const user = await User.create({ email, password: hashedPassword })
         res.status(201).json({ id: user.id, email: user.email })
     } catch (error) {
-        console.error('Error registering user:', error) // Для отладки
+        console.error('Error registering user:', error)
         res.status(500).json({ error: 'Internal Server Error' })
     }
 })
