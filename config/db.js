@@ -1,17 +1,6 @@
 require('dotenv').config(); // Подключение переменных окружения
 const { Sequelize } = require('sequelize')
 
-// Логирование перед подключением
-console.log('Connecting to database with config:', {
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  ssl: true,
-})
-
-
 const sequelize = new Sequelize(
   process.env.DB_NAME,      // Имя базы данных
   process.env.DB_USER,      // Пользователь базы данных
