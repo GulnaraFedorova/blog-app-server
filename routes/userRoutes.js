@@ -7,30 +7,26 @@ const router = express.Router();
 
 // Регистрация
 router.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-
     try {
-        // Проверяем, существует ли пользователь
-        const existingUser = await models.User.findOne({ where: { email } });
+        const { email, password } = req.body
+        // Проверка, есть ли пользователь с таким email
+        const existingUser = await User.findOne({ where: { email } })
         if (existingUser) {
-            return res.status(400).json({ error: 'User already exists' });
+            return res.status(400).json({ error: 'Email is already in use' })
         }
 
-        // Хэшируем пароль
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Хэширование пароля
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
 
-        // Создаём нового пользователя
-        const newUser = await models.User.create({
-            email,
-            password: hashedPassword,
-        });
-
-        res.status(201).json({ message: 'User registered successfully', user: newUser });
-    } catch (err) {
-        console.error('Error registering user:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        // Создание пользователя
+        const user = await User.create({ email, password: hashedPassword })
+        res.status(201).json({ id: user.id, email: user.email })
+    } catch (error) {
+        console.error('Error registering user:', error) // Для отладки
+        res.status(500).json({ error: 'Internal Server Error' })
     }
-});
+})
 
 // Авторизация
 router.post('/login', async (req, res) => {

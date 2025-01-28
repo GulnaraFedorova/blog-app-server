@@ -17,12 +17,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-    });
-
-    // Если нужны связи
-    User.associate = (models) => {
-        User.hasMany(models.Post, { foreignKey: 'authorId', as: 'posts' });
-    };
-
-    return User;
-};
+    })
+    return User
+}
