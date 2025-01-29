@@ -10,6 +10,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+app.use(cors());  // Разрешаем CORS для всех доменов
+app.use(express.json());
+
 // Подключение маршрутов
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
