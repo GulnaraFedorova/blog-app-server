@@ -6,7 +6,6 @@ const models = require("./models");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const { swaggerUi, swaggerDocs } = require("./swagger");
-const cors = require("cors");
 
 const app = express();
 
