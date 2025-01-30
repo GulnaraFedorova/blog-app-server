@@ -117,7 +117,14 @@ router.post("/login", async (req, res) => {
         );
 
         console.log("✅ Успешный вход:", email);
-        res.status(200).json({ message: "Вход выполнен успешно", token, name: user.name });
+
+        res.status(200).json({
+            message: "Вход выполнен успешно",
+            token,
+            userId: user.id,
+            name: user.name
+        });
+
     } catch (err) {
         console.error("❌ Ошибка при авторизации:", err);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
