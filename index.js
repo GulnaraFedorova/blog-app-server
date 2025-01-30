@@ -20,15 +20,12 @@ app.use(express.json());
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
-    console.log("📁 Папка 'uploads' создана.");
+    console.log("✅ Папка 'uploads' создана.");
 }
 
 // Подключение маршрутов
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
-
-// Раздача статических файлов из `uploads/`
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Раздача загруженных файлов
 app.use("/uploads", express.static(uploadDir));
