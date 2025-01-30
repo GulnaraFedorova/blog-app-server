@@ -27,6 +27,9 @@ if (!fs.existsSync(uploadDir)) {
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 
+// Раздача статических файлов из `uploads/`
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Раздача загруженных файлов
 app.use("/uploads", express.static(uploadDir));
 
