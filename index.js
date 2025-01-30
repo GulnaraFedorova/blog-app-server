@@ -23,6 +23,9 @@ app.get("/", (req, res) => {
     res.send("✅ Сервер работает");
 });
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
 // Подключение к базе данных
 models.sequelize
     .authenticate()
