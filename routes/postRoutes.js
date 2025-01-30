@@ -1,6 +1,6 @@
-const express = require('express');
-const models = require('../models');
-const { authenticateToken } = require('../middlewares/authMiddleware'); // Для проверки JWT
+const express = require("express");
+const models = require("../models");
+const { authenticateToken } = require("../middlewares/authMiddleware"); // Проверка JWT
 
 const router = express.Router();
 
@@ -33,9 +33,9 @@ const router = express.Router();
  *       500:
  *         description: Ошибка сервера
  */
-router.post('/', authenticateToken, async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
     const { content, mediaUrl } = req.body;
-    const userId = req.user.id; // Получаем ID пользователя из JWT
+    const userId = req.user.id;
 
     try {
         const post = await models.Post.create({
@@ -43,10 +43,10 @@ router.post('/', authenticateToken, async (req, res) => {
             mediaUrl,
             authorId: userId,
         });
-        res.status(201).json({ message: 'Post created successfully', post });
+        res.status(201).json({ message: "✅ Пост успешно создан", post });
     } catch (err) {
-        console.error('Error creating post:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("❌ Ошибка при создании поста:", err);
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
     }
 });
 
@@ -68,34 +68,31 @@ router.post('/', authenticateToken, async (req, res) => {
  *                 properties:
  *                   id:
  *                     type: integer
- *                     description: ID поста
  *                   content:
  *                     type: string
- *                     description: Контент поста
  *                   mediaUrl:
  *                     type: string
- *                     description: URL изображения или видео
  *                   author:
  *                     type: object
  *                     properties:
  *                       id:
  *                         type: integer
- *                         description: ID автора
+ *                       name:
+ *                         type: string
+ *                         description: Имя автора
  *                       email:
  *                         type: string
- *                         description: Email автора
- *       500:
- *         description: Ошибка сервера
  */
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const posts = await models.Post.findAll({
-            include: [{ model: models.User, as: 'author', attributes: ['id', 'email'] }],
+            include: [{ model: models.User, as: "author", attributes: ["id", "name", "email"] }],
+            order: [["createdAt", "DESC"]],
         });
         res.status(200).json(posts);
     } catch (err) {
-        console.error('Error fetching posts:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("❌ Ошибка при получении постов:", err);
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
     }
 });
 
@@ -113,7 +110,6 @@ router.get('/', async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID поста
  *     requestBody:
  *       required: true
  *       content:
@@ -123,10 +119,8 @@ router.get('/', async (req, res) => {
  *             properties:
  *               content:
  *                 type: string
- *                 description: Обновленный контент поста
  *               mediaUrl:
  *                 type: string
- *                 description: Обновленный URL изображения или видео
  *     responses:
  *       200:
  *         description: Пост успешно обновлен
@@ -134,10 +128,8 @@ router.get('/', async (req, res) => {
  *         description: Доступ запрещен (не автор поста)
  *       404:
  *         description: Пост не найден
- *       500:
- *         description: Ошибка сервера
  */
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put("/:id", authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { content, mediaUrl } = req.body;
     const userId = req.user.id;
@@ -146,22 +138,21 @@ router.put('/:id', authenticateToken, async (req, res) => {
         const post = await models.Post.findByPk(id);
 
         if (!post) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ error: "Пост не найден" });
         }
 
-        // Проверяем, что пользователь — автор поста
         if (post.authorId !== userId) {
-            return res.status(403).json({ error: 'Forbidden: You are not the author of this post' });
+            return res.status(403).json({ error: "❌ Ошибка: Вы не являетесь автором этого поста" });
         }
 
         post.content = content;
         post.mediaUrl = mediaUrl;
         await post.save();
 
-        res.status(200).json({ message: 'Post updated successfully', post });
+        res.status(200).json({ message: "✅ Пост успешно обновлен", post });
     } catch (err) {
-        console.error('Error updating post:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("❌ Ошибка при обновлении поста:", err);
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
     }
 });
 
@@ -179,7 +170,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID поста
  *     responses:
  *       200:
  *         description: Пост успешно удален
@@ -187,10 +177,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
  *         description: Доступ запрещен (не автор поста)
  *       404:
  *         description: Пост не найден
- *       500:
- *         description: Ошибка сервера
  */
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete("/:id", authenticateToken, async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
@@ -198,20 +186,19 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         const post = await models.Post.findByPk(id);
 
         if (!post) {
-            return res.status(404).json({ error: 'Post not found' });
+            return res.status(404).json({ error: "Пост не найден" });
         }
 
-        // Проверяем, что пользователь — автор поста
         if (post.authorId !== userId) {
-            return res.status(403).json({ error: 'Forbidden: You are not the author of this post' });
+            return res.status(403).json({ error: "❌ Ошибка: Вы не являетесь автором этого поста" });
         }
 
         await post.destroy();
 
-        res.status(200).json({ message: 'Post deleted successfully' });
+        res.status(200).json({ message: "✅ Пост успешно удален" });
     } catch (err) {
-        console.error('Error deleting post:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("❌ Ошибка при удалении поста:", err);
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
     }
 });
 
