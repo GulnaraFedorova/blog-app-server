@@ -21,11 +21,11 @@ module.exports = (sequelize, DataTypes) => {
             },
         },
         {
+            tableName: "Posts",
             timestamps: true,
         }
     );
 
-    // Настройка связи с User
     Post.associate = (models) => {
         Post.belongsTo(models.User, {
             foreignKey: "authorId",
