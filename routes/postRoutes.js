@@ -156,28 +156,39 @@ router.get("/", async (req, res) => {
  *       404:
  *         description: Пост не найден
  */
-router.put("/:id", authenticateToken, async (req, res) => {
+router.put("/:id", authenticateToken, upload.single("media"), async (req, res) => {
+    console.log("`PUT`-запрос получен. Body:", req.body, "File:", req.file);
+
     const { id } = req.params;
-    const { content, mediaUrl } = req.body;
     const userId = req.user.id;
+
+    let content = req.body.content;
+    if (!content) {
+        try {
+            content = JSON.parse(Object.keys(req.body)[0]).content;
+        } catch (err) {
+            console.warn("⚠️ Ошибка парсинга `content`:", err);
+        }
+    }
+
+    content = content ? content.trim() : " "; 
+    const mediaUrl = req.file ? `/uploads/${req.file.filename}` : req.body.mediaUrl;
 
     try {
         const post = await models.Post.findByPk(id);
-        if (!post) {
-            return res.status(404).json({ error: "Пост не найден" });
-        }
+        if (!post) return res.status(404).json({ error: "Пост не найден" });
+
         if (post.authorId !== userId) {
-            return res.status(403).json({ error: "❌ Ошибка: Вы не являетесь автором этого поста" });
+            return res.status(403).json({ error: "Ошибка: Вы не автор этого поста" });
         }
 
-        post.content = content;
-        post.mediaUrl = mediaUrl;
-        await post.save();
+        await post.update({ content, mediaUrl });
 
-        res.status(200).json({ message: "Пост успешно обновлен", post });
+        console.log("Пост успешно обновлён:", post);
+        res.status(200).json({ message: "Пост обновлён", post });
     } catch (err) {
-        console.error("❌ Ошибка при обновлении поста:", err);
-        res.status(500).json({ error: "Внутренняя ошибка сервера" });
+        console.error("Ошибка при обновлении поста:", err);
+        res.status(500).json({ error: "Ошибка сервера при обновлении поста" });
     }
 });
 
