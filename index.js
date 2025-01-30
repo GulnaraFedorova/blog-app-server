@@ -1,4 +1,6 @@
 require("dotenv").config();
+const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const models = require("./models");
 const userRoutes = require("./routes/userRoutes");
@@ -11,20 +13,27 @@ const app = express();
 // CORS
 app.use(cors());
 
-// JSON-парсер (для обработки `req.body`)
+// JSON
 app.use(express.json());
+
+// Проверяем и создаем папку для загрузок
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("📁 Папка 'uploads' создана.");
+}
 
 // Подключение маршрутов
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 
+// Раздача загруженных файлов
+app.use("/uploads", express.static(uploadDir));
+
 // Тестовый маршрут
 app.get("/", (req, res) => {
     res.send("✅ Сервер работает");
 });
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 
 // Подключение к базе данных
 models.sequelize
