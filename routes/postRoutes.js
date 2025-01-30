@@ -1,8 +1,26 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 const models = require("../models");
-const { authenticateToken } = require("../middlewares/authMiddleware"); // Проверка JWT
+const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
+
+// Настройки хранения загружаемых файлов
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = path.join(__dirname, "../uploads");
+        if (!fs.existsSync(uploadPath)) {
+            fs.mkdirSync(uploadPath, { recursive: true });
+        }
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+const upload = multer({ storage });
 
 // Создание поста (Create)
 /**
@@ -12,19 +30,22 @@ const router = express.Router();
  *     summary: Создание нового поста
  *     security:
  *       - bearerAuth: []
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               content:
  *                 type: string
  *                 description: Контент поста
- *               mediaUrl:
+ *               media:
  *                 type: string
- *                 description: URL изображения или видео
+ *                 format: binary
+ *                 description: Медиафайл (изображение или видео)
  *     responses:
  *       201:
  *         description: Пост успешно создан
@@ -33,16 +54,17 @@ const router = express.Router();
  *       500:
  *         description: Ошибка сервера
  */
-router.post("/", authenticateToken, async (req, res) => {
-    const { content, mediaUrl } = req.body;
-    const userId = req.user.id;
-
+router.post("/", authenticateToken, upload.single("media"), async (req, res) => {
     try {
+        const { content } = req.body;
+        const mediaUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
         const post = await models.Post.create({
             content,
             mediaUrl,
-            authorId: userId,
+            authorId: req.user.id,
         });
+
         res.status(201).json({ message: "✅ Пост успешно создан", post });
     } catch (err) {
         console.error("❌ Ошибка при создании поста:", err);
@@ -72,6 +94,9 @@ router.post("/", authenticateToken, async (req, res) => {
  *                     type: string
  *                   mediaUrl:
  *                     type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  *                   author:
  *                     type: object
  *                     properties:
@@ -136,11 +161,9 @@ router.put("/:id", authenticateToken, async (req, res) => {
 
     try {
         const post = await models.Post.findByPk(id);
-
         if (!post) {
             return res.status(404).json({ error: "Пост не найден" });
         }
-
         if (post.authorId !== userId) {
             return res.status(403).json({ error: "❌ Ошибка: Вы не являетесь автором этого поста" });
         }
@@ -184,13 +207,19 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
     try {
         const post = await models.Post.findByPk(id);
-
         if (!post) {
             return res.status(404).json({ error: "Пост не найден" });
         }
-
         if (post.authorId !== userId) {
             return res.status(403).json({ error: "❌ Ошибка: Вы не являетесь автором этого поста" });
+        }
+
+        // Удаляем файл, если он есть
+        if (post.mediaUrl) {
+            const filePath = path.join(__dirname, "..", post.mediaUrl);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
         }
 
         await post.destroy();
