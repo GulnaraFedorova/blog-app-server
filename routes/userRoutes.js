@@ -24,6 +24,9 @@ if (!process.env.JWT_SECRET) {
  *           schema:
  *             type: object
  *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Имя пользователя
  *               email:
  *                 type: string
  *                 description: Email пользователя
@@ -42,9 +45,9 @@ router.post("/register", async (req, res) => {
     try {
         console.log("📩 Регистрация пользователя:", req.body.email);
 
-        const { email, password } = req.body;
-        if (!email || !password) {
-            return res.status(400).json({ error: "Необходимо указать email и пароль" });
+        const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: "Необходимо указать имя, email и пароль" });
         }
 
         const existingUser = await User.findOne({ where: { email } });
@@ -53,10 +56,10 @@ router.post("/register", async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({ email, password: hashedPassword });
+        const user = await User.create({ name, email, password: hashedPassword });
 
         console.log("✅ Пользователь зарегистрирован:", user.email);
-        res.status(201).json({ id: user.id, email: user.email });
+        res.status(201).json({ id: user.id, name: user.name, email: user.email });
     } catch (error) {
         console.error("❌ Ошибка при регистрации:", error);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
@@ -107,10 +110,14 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ error: "Неверный email или пароль" });
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(
+            { id: user.id, name: user.name, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
 
         console.log("✅ Успешный вход:", email);
-        res.status(200).json({ message: "Вход выполнен успешно", token });
+        res.status(200).json({ message: "Вход выполнен успешно", token, name: user.name });
     } catch (err) {
         console.error("❌ Ошибка при авторизации:", err);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
