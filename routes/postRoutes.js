@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadPath = path.join(__dirname, "../uploads");
         if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+            fs.mkdirSync(uploadPath, { recursive: true }); 
         }
         cb(null, uploadPath);
     },
@@ -56,6 +56,8 @@ const upload = multer({ storage });
  */
 router.post("/", authenticateToken, upload.single("media"), async (req, res) => {
     try {
+        console.log("🔍 Авторизованный пользователь:", req.user);
+
         const { content } = req.body;
         const mediaUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -68,7 +70,7 @@ router.post("/", authenticateToken, upload.single("media"), async (req, res) => 
         res.status(201).json({ message: "✅ Пост успешно создан", post });
     } catch (err) {
         console.error("❌ Ошибка при создании поста:", err);
-        res.status(500).json({ error: "Внутренняя ошибка сервера" });
+        res.status(500).json({ error: "Ошибка сервера" });
     }
 });
 
