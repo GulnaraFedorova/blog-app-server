@@ -10,16 +10,13 @@ const router = express.Router();
 // Настройки хранения загружаемых файлов
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadPath = path.join(__dirname, "../uploads");
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true }); 
-        }
-        cb(null, uploadPath);
+        cb(null, "uploads/");
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
+        cb(null, Date.now() + "-" + file.originalname);
+    }
 });
+
 const upload = multer({ storage });
 
 // Создание поста (Create)
@@ -55,22 +52,21 @@ const upload = multer({ storage });
  *         description: Ошибка сервера
  */
 router.post("/", authenticateToken, upload.single("media"), async (req, res) => {
+    const { content } = req.body;
+    const userId = req.user.id;
+    const mediaUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
     try {
-        console.log("🔍 Авторизованный пользователь:", req.user);
-
-        const { content } = req.body;
-        const mediaUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
         const post = await models.Post.create({
             content,
             mediaUrl,
-            authorId: req.user.id,
+            authorId: userId,
         });
 
         res.status(201).json({ message: "✅ Пост успешно создан", post });
     } catch (err) {
         console.error("❌ Ошибка при создании поста:", err);
-        res.status(500).json({ error: "Ошибка сервера" });
+        res.status(500).json({ error: "Внутренняя ошибка сервера" });
     }
 });
 
@@ -174,7 +170,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
         post.mediaUrl = mediaUrl;
         await post.save();
 
-        res.status(200).json({ message: "✅ Пост успешно обновлен", post });
+        res.status(200).json({ message: "Пост успешно обновлен", post });
     } catch (err) {
         console.error("❌ Ошибка при обновлении поста:", err);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
@@ -226,7 +222,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 
         await post.destroy();
 
-        res.status(200).json({ message: "✅ Пост успешно удален" });
+        res.status(200).json({ message: "Пост успешно удален" });
     } catch (err) {
         console.error("❌ Ошибка при удалении поста:", err);
         res.status(500).json({ error: "Внутренняя ошибка сервера" });
