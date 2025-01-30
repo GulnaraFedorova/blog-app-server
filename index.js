@@ -11,10 +11,15 @@ const cors = require("cors");
 const app = express();
 
 // CORS
-app.use(cors());
+const cors = require("cors");
+app.use(cors({ origin: "*", methods: "GET,HEAD,PUT,PATCH,POST,DELETE" }));
 
 // JSON
 app.use(express.json());
+
+// Подключение маршрутов
+app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
 
 // Проверяем и создаем папку для загрузок
 const uploadDir = path.join(__dirname, "uploads");
@@ -23,12 +28,14 @@ if (!fs.existsSync(uploadDir)) {
     console.log("✅ Папка 'uploads' создана.");
 }
 
-// Подключение маршрутов
-app.use("/api/users", userRoutes);
-app.use("/api/posts", postRoutes);
-
 // Раздача загруженных файлов
-app.use("/uploads", express.static(uploadDir));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res, path) => {
+        if (path.endsWith(".mp4")) {
+            res.setHeader("Content-Type", "video/mp4");
+        }
+    },
+}));
 
 // Тестовый маршрут
 app.get("/", (req, res) => {
